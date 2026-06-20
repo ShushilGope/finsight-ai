@@ -440,15 +440,33 @@ def _sidebar() -> str:
             unsafe_allow_html=True,
         )
 
-        with st.expander("API keys", expanded=not bool(os.getenv("GOOGLE_API_KEY"))):
-            google_key = st.text_input("Google Gemini API key", value=os.getenv("GOOGLE_API_KEY", ""), type="password",
-                                        placeholder="AIza...", help="Get yours at https://aistudio.google.com/")
-            serper_key = st.text_input("Serper.dev API key", value=os.getenv("SERPER_API_KEY", ""), type="password",
-                                        placeholder="abc123...", help="Get yours at https://serper.dev/")
-            if google_key:
-                os.environ["GOOGLE_API_KEY"] = google_key
-            if serper_key:
-                os.environ["SERPER_API_KEY"] = serper_key
+        # IMPORTANT: never set value=<the real secret> on these inputs.
+        # Doing so pre-fills and exposes the host's key to every visitor.
+        # These boxes start empty; if the host has already configured keys
+        # via st.secrets, visitors never need to touch this section at all.
+        host_has_keys = bool(os.getenv("GOOGLE_API_KEY")) and bool(os.getenv("SERPER_API_KEY"))
+
+        if host_has_keys:
+            with st.expander("API keys (optional override)", expanded=False):
+                st.caption("This app already has keys configured. Only fill these in if you want to use your own.")
+                google_key = st.text_input("Google Gemini API key", value="", type="password",
+                                            placeholder="AIza...", help="Get yours at https://aistudio.google.com/")
+                serper_key = st.text_input("Serper.dev API key", value="", type="password",
+                                            placeholder="abc123...", help="Get yours at https://serper.dev/")
+                if google_key:
+                    os.environ["GOOGLE_API_KEY"] = google_key
+                if serper_key:
+                    os.environ["SERPER_API_KEY"] = serper_key
+        else:
+            with st.expander("API keys", expanded=True):
+                google_key = st.text_input("Google Gemini API key", value="", type="password",
+                                            placeholder="AIza...", help="Get yours at https://aistudio.google.com/")
+                serper_key = st.text_input("Serper.dev API key", value="", type="password",
+                                            placeholder="abc123...", help="Get yours at https://serper.dev/")
+                if google_key:
+                    os.environ["GOOGLE_API_KEY"] = google_key
+                if serper_key:
+                    os.environ["SERPER_API_KEY"] = serper_key
 
         model_label = st.selectbox("Model", options=list(MODELS.keys()), index=0)
         model_id = MODELS[model_label]
